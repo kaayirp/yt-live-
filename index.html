@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05060f;--panel:#0c0f1f;--line:#1c2240;--ink:#e8ecff;--mute:#7a83ad;--cyan:#00e5ff;--pink:#ff2bd6;--live:#ff3b6b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:500 17px/1.45 Rajdhani,system-ui,sans-serif;
+background:radial-gradient(900px 500px at 85% -10%,rgba(255,43,214,.18),transparent 60%),radial-gradient(800px 500px at 0% 0%,rgba(0,229,255,.14),transparent 60%),var(--bg)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:46px 46px;opacity:.28;mask-image:linear-gradient(#000,transparent 75%)}
+main{position:relative;max-width:1000px;margin:0 auto;padding:44px 18px 70px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:34px}
+h1{font:800 clamp(2rem,6vw,3.4rem)/1 Orbitron,sans-serif;margin:0;letter-spacing:.02em;background:linear-gradient(90deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.status{text-align:right;color:var(--mute)}
+.count{font:800 2.4rem/1 Orbitron,sans-serif;color:var(--ink)}
+.count.hot{color:var(--live);text-shadow:0 0 18px rgba(255,59,107,.7)}
+h2{font:600 .95rem Orbitron,sans-serif;letter-spacing:.14em;margin:0 0 14px;color:var(--cyan)}
+h2.off{color:var(--mute)}
+.live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin-bottom:38px}
+.cut{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+.lcard{position:relative;display:block;color:inherit;text-decoration:none;padding:2px;background:linear-gradient(135deg,var(--live),var(--pink),var(--cyan));transition:transform .2s,filter .2s;animation:glow 2.4s ease-in-out infinite}
+.lcard:hover{transform:translateY(-4px);filter:brightness(1.12)}
+.lin{background:var(--panel)}
+.thumb{aspect-ratio:16/9;background:#000 center/cover;position:relative}
+.thumb b{position:absolute;left:10px;top:10px;background:var(--live);color:#fff;font:700 .8rem Orbitron,sans-serif;padding:4px 10px;display:flex;align-items:center;gap:7px;letter-spacing:.1em}
+.thumb b i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+.meta{display:flex;gap:12px;align-items:center;padding:12px 14px 14px}
+.meta img{width:46px;height:46px;border-radius:50%;border:2px solid var(--cyan);flex:none}
+.meta div{min-width:0}
+.nm{font:700 1.2rem/1.1 Rajdhani,sans-serif}
+.tt{color:var(--mute);font-size:.95rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.watch{margin-left:auto;flex:none;font:700 .72rem Orbitron,sans-serif;color:#05060f;background:var(--cyan);padding:8px 10px;letter-spacing:.06em}
+.off-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.ocard{display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--panel);border:1px solid var(--line);color:inherit;text-decoration:none;opacity:.7;transition:opacity .2s,border-color .2s}
+.ocard:hover{opacity:1;border-color:var(--cyan)}
+.ocard img{width:38px;height:38px;border-radius:50%;filter:grayscale(1)}
+.ocard span{font-weight:700}
+.ocard small{display:block;color:var(--mute);font:600 .65rem Orbitron,sans-serif;letter-spacing:.12em}
+.msg{color:var(--mute);padding:26px 0;border:1px dashed var(--line);text-align:center;margin-bottom:38px}
+@keyframes glow{50%{filter:drop-shadow(0 0 14px rgba(255,59,107,.55))}}
+@keyframes blink{50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.lcard,.thumb b i{animation:none}}
+a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>LIVE RADAR</h1>
+    <div class="status"><div class="count" id="count">–</div><div id="stamp">Scanning…</div></div>
+  </header>
+  <h2>LIVE NOW</h2>
+  <div id="live"></div>
+  <h2 class="off">OFFLINE</h2>
+  <div class="off-grid" id="off"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+let lastOk = 0;
+async function load(){
+  try{
+    const data = await (await fetch("live.json?t=" + Date.now())).json();
+    const all = data.creators.slice().sort((a,b)=>a.name.localeCompare(b.name));
+    const live = all.filter(c=>c.live), off = all.filter(c=>!c.live);
+    $("count").textContent = live.length + " LIVE";
+    $("count").className = "count" + (live.length ? " hot" : "");
+    const L = $("live"); L.textContent = "";
+    if(!live.length){ L.className = "msg"; L.textContent = all.length ? "Nobody is live right now. This page checks again automatically." : "No creators yet. Add handles to creators.json."; }
+    else{
+      L.className = "live-grid";
+      for(const c of live){
+        const a = el("a","lcard cut"); a.href = "https://www.youtube.com/watch?v=" + c.videoId; a.target = "_blank"; a.rel = "noopener";
+        const inn = el("div","lin cut");
+        const th = el("div","thumb"); th.style.backgroundImage = "url(https://i.ytimg.com/vi/" + c.videoId + "/mqdefault.jpg)";
+        const b = el("b"); b.append(el("i"), "LIVE"); th.append(b);
+        const m = el("div","meta"); const img = el("img"); img.src = c.avatar; img.alt = "";
+        const t = el("div"); t.append(el("div","nm",c.name), el("div","tt",c.title || "Streaming now"));
+        m.append(img, t, el("div","watch","WATCH"));
+        inn.append(th, m); a.append(inn); L.append(a);
+      }
+    }
+    const O = $("off"); O.textContent = "";
+    for(const c of off){
+      const a = el("a","ocard"); a.href = "https://www.youtube.com/" + c.handle; a.target = "_blank"; a.rel = "noopener";
+      const img = el("img"); img.src = c.avatar; img.alt = "";
+      const t = el("div"); const s = el("span",null,c.name); const sm = el("small",null,"OFFLINE"); t.append(s, sm);
+      a.append(img, t); O.append(a);
+    }
+    lastOk = Date.now();
+  }catch(e){ $("stamp").textContent = "Signal lost. Retrying…"; }
+}
+function tick(){ if(lastOk){ const s = Math.round((Date.now()-lastOk)/1000); $("stamp").textContent = "Updated " + s + "s ago"; } }
+load(); setInterval(load, 60000); setInterval(tick, 1000);
+</script>
+</body>
+</html>
