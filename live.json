@@ -1,1 +1,31 @@
-{"creators": []}
+{
+  "creators": [
+    {
+      "handle": "@LofiGirl",
+      "id": "UCSJ4gkVC6NrvII8umztf0Ow",
+      "name": "Lofi Girl",
+      "avatar": "https://yt3.ggpht.com/IcZW-YBFLCGKQ7BvC8yevab9YAG1SmkEwCd80kcYrhwb0dH39Trfp3DMsI5ZJCsp9wTE60OH428=s88-c-k-c0x00ffffff-no-rj",
+      "live": false,
+      "videoId": null,
+      "title": null
+    },
+    {
+      "handle": "@NASA",
+      "id": "UCLA_DiR1FfKNvjuUpBHmylQ",
+      "name": "NASA",
+      "avatar": "https://yt3.ggpht.com/eIf5fNPcIcj9ig-wZBeq4stFy1lgjWTW1nLT5dYlFkHZprZ03QBiMcbpwNMB6XSBjrSFGtAGQg=s88-c-k-c0x00ffffff-no-rj",
+      "live": false,
+      "videoId": null,
+      "title": null
+    },
+    {
+      "handle": "@MrBeast",
+      "id": "UCX6OQ3DkcsbYNE6H8uQQuVA",
+      "name": "MrBeast",
+      "avatar": "https://yt3.ggpht.com/nxYrc_1_2f77DoBadyxMTmv7ZpRZapHR5jbuYe7PlPd5cIRJxtNNEYyOC0ZsxaDyJJzXrnJiuDE=s88-c-k-c0x00ffffff-no-rj",
+      "live": false,
+      "videoId": null,
+      "title": null
+    }
+  ]
+}
