@@ -1,0 +1,26 @@
+name: Check who is live
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    paths: [creators.json]
+permissions:
+  contents: write
+concurrency: check-live
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python check_live.py
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+      - run: |
+          git config user.name "live-bot"
+          git config user.email "live-bot@users.noreply.github.com"
+          git add live.json
+          git diff --cached --quiet || (git commit -m "Update live status" && git push)
